@@ -60,25 +60,91 @@ function directory() {
 
 
 # git
-ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_no_bold[blue]%}git(%{$fg_no_bold[red]%}";
-ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} ";
-ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg_no_bold[blue]%}) %{$fg_no_bold[red]%}⬢";#⬣⎔⬢⬣⇵⇅
-# ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg_no_bold[blue]%}) 🔥";
-ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg_no_bold[blue]%}) %{$fg_no_bold[green]%}⬡";#⬡
+ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_no_bold[blue]%}(%{$fg_no_bold[red]%}";
+ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}";
+ZSH_THEME_GIT_PROMPT_END_SUFFIX="%{$fg_no_bold[blue]%})%{$reset_color%}";
 
-# ZSH_THEME_GIT_PROMPT_REMOTE_STATUS_DETAILED=true;
-# ZSH_THEME_GIT_PROMPT_AHEAD_REMOTE="%{$fg_no_bold[red]%}⇡"
-# ZSH_THEME_GIT_PROMPT_BEHIND_REMOTE="%{$fg_no_bold[red]%}⇣"
-ZSH_THEME_GIT_COMMITS_AHEAD_PREFIX="$FG[005]⇡"
-ZSH_THEME_GIT_COMMITS_AHEAD_SUFFIX=""
-ZSH_THEME_GIT_COMMITS_BEHIND_PREFIX="$FG[005]⇣"
-ZSH_THEME_GIT_COMMITS_BEHIND_SUFFIX=""
+ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg_bold[green]%}✓%{$reset_color%}"
+
+ZSH_THEME_GIT_PROMPT_AHEAD_PREFIX="$FG[005]⇡"
+ZSH_THEME_GIT_PROMPT_AHEAD_SUFFIX="%{$reset_color%}"
+
+ZSH_THEME_GIT_PROMPT_BEHIND_PREFIX="$FG[005]⇣"
+ZSH_THEME_GIT_PROMPT_BEHIND_SUFFIX="%{$reset_color%}"
+
+ZSH_THEME_GIT_PROMPT_STAGED="%{$fg_bold[green]%}+%{$reset_color%}"
+ZSH_THEME_GIT_PROMPT_UNSTAGED="%{$fg_bold[yellow]%}*%{$reset_color%}"
+ZSH_THEME_GIT_PROMPT_UNTRACKED="%{$fg_bold[red]%}⬢%{$reset_color%}"
+
+ZSH_THEME_GIT_PROMPT_UNMERGED="%{$fg_bold[red]%}!%{$reset_color%}"
+
+
+# Copy from the `bureau` theme
+bureau_git_branch () {
+  local ref
+  ref=$(command git symbolic-ref HEAD 2> /dev/null) || \
+  ref=$(command git rev-parse --short HEAD 2> /dev/null) || return
+  echo "${ZSH_THEME_GIT_PROMPT_PREFIX}${ref#refs/heads/}${ZSH_THEME_GIT_PROMPT_SUFFIX}"
+}
+
+bureau_git_status() {
+  local result gitstatus
+
+  # check status of files
+  gitstatus=$(command git status --porcelain -b 2> /dev/null)
+  if [[ -n "$gitstatus" ]]; then
+    if $(echo "$gitstatus" | command grep -q '^[AMRD]. '); then
+      result+="$ZSH_THEME_GIT_PROMPT_STAGED"
+    fi
+    if $(echo "$gitstatus" | command grep -q '^.[MTD] '); then
+      result+="$ZSH_THEME_GIT_PROMPT_UNSTAGED"
+    fi
+    if $(echo "$gitstatus" | command grep -q -E '^\?\? '); then
+      result+="$ZSH_THEME_GIT_PROMPT_UNTRACKED"
+    fi
+    if $(echo "$gitstatus" | command grep -q '^UU '); then
+      result+="$ZSH_THEME_GIT_PROMPT_UNMERGED"
+    fi
+  else
+    result+="$ZSH_THEME_GIT_PROMPT_CLEAN"
+  fi
+
+  # check status of local repository
+  if $(echo "$gitstatus" | command grep -q '^## .*ahead'); then
+    result+="${ZSH_THEME_GIT_PROMPT_AHEAD_PREFIX}$(git_commits_ahead)${ZSH_THEME_GIT_PROMPT_AHEAD_SUFFIX}"
+  fi
+
+  if $(echo "$gitstatus" | command grep -q '^## .*behind'); then
+    result+="${ZSH_THEME_GIT_PROMPT_BEHIND_PREFIX}$(git_commits_behind)${ZSH_THEME_GIT_PROMPT_BEHIND_SUFFIX}"
+  fi
+
+  if $(echo "$gitstatus" | command grep -q '^## .*diverged'); then
+    result+="$ZSH_THEME_GIT_PROMPT_DIVERGED"
+  fi
+
+  if $(command git rev-parse --verify refs/stash &> /dev/null); then
+    result+="$ZSH_THEME_GIT_PROMPT_STASHED"
+  fi
+
+  if [[ $(git ls-files -u) != "" ]]; then
+    result+="$ZSH_THEME_GIT_PROMPT_UNMERGED"
+  fi
+
+  echo $result
+}
 
 function update_git_status() {
-    GIT_STATUS=$(git_prompt_info);
+    GIT_STATUS=$(bureau_git_branch);
+    local git_status="$(bureau_git_status)"
+    if [[ $git_status != "" ]]; then
+        GIT_STATUS+=" $(bureau_git_status)";
+    fi 
+    GIT_STATUS+=${ZSH_THEME_GIT_PROMPT_END_SUFFIX};
 }
 
 function git_status() {
+    # update git status for every second.
+    update_git_status
     echo "${GIT_STATUS}"
 }
 
@@ -191,7 +257,7 @@ current_time_millis() {
 
 # command execute after
 # REF: http://zsh.sourceforge.net/Doc/Release/Functions.html
-precmd() {
+dash_passion_precmd() {
     # last_cmd
     local last_cmd_return_code=$?;
     local last_cmd_result=true;
@@ -202,9 +268,6 @@ precmd() {
         last_cmd_result=false;
     fi
 
-    # update_git_status
-    update_git_status;
-
     # update_command_status
     update_command_status $last_cmd_result;
 
@@ -212,11 +275,6 @@ precmd() {
     output_command_execute_after $last_cmd_result;
 
 }
-
-
-# set option
-setopt PROMPT_SUBST;
-
 
 # timer
 #REF: https://stackoverflow.com/questions/26526175/zsh-menu-completion-causes-problems-after-zle-reset-prompt
@@ -231,11 +289,9 @@ TRAPALRM() {
     fi
 }
 
-
-
-# prompt
-# PROMPT='$(real_time) $(login_info) $(directory) $(git_status)$(command_status) ';
-# PROMPT='$(real_time) $(directory) $(git_status)$(command_status) ';
-PROMPT='$(real_time) $(directory) $(git_status)$(git_commits_ahead)$(git_commits_behind) $(command_status) ';
-# RPROMPT='%{$FG[242]%}%n@%m${color_reset}';
+setopt prompt_subst
+PROMPT='$(real_time) $(directory) $(git_status) $(command_status) ';
 RPROMPT='%{$FG[242]%}%n@%m $(battery_pct_prompt)${color_reset}';
+
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd dash_passion_precmd

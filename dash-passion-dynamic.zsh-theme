@@ -60,9 +60,9 @@ function directory() {
 
 
 # git
-ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_no_bold[blue]%}(%{$fg_no_bold[red]%}";
+ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_no_bold[blue]%}❮%{$fg_no_bold[red]%}";
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}";
-ZSH_THEME_GIT_PROMPT_END_SUFFIX="%{$fg_no_bold[blue]%})%{$reset_color%}";
+ZSH_THEME_GIT_PROMPT_END_SUFFIX="%{$fg_no_bold[blue]%}❯%{$reset_color%}";
 
 ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg_bold[green]%}✓%{$reset_color%}"
 

@@ -4,7 +4,7 @@ An oh-my-zsh theme.
 
 ## Introduction
 
-![passion](https://github.com/orphee-celui-qui-ne-sait-rien/ohmyzsh-theme-passion/blob/7b19f087b658a5912138c6fa33b6ff86f025e7f0/demo-dash-passion.mov)
+![passion](https://github.com/orphee-celui-qui-ne-sait-rien/ohmyzsh-theme-passion/blob/1b9ce62ebdf21394eeac40e4902870f39115d05f/demo-dash-passion.gif)
 
 * real time prompt.
 * command running time cost prompt.

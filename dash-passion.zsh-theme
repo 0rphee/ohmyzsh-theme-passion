@@ -1,4 +1,3 @@
-
 # gdate for macOS
 # REF: https://apple.stackexchange.com/questions/135742/time-in-milliseconds-since-epoch-in-the-terminal
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -101,8 +100,8 @@ typeset +H my_orange="$FG[214]"
 
 # separator dashes size
 function afmagic_dashes {
-    local ratio=0.9
-    echo $((COLUMNS * ratio))
+    local ratio=1;
+    echo $((COLUMNS * ratio));
 }
 
 # output command execute after
@@ -117,7 +116,7 @@ output_command_execute_after() {
     local color_cmd="";
     if $1;
     then
-        color_cmd="$fg_no_bold[green]";
+        color_cmd="$fg_bold[green]";
     else
         color_cmd="$fg_bold[red]";
     fi
@@ -142,8 +141,8 @@ output_command_execute_after() {
     local color_cost="$fg_no_bold[yellow]";
     cost="${color_cost}${cost}${color_reset}";
 
-    echo -e "${time} ${cost} ${cmd}";
-    echo -e "";
+    echo -e "${cost} ${time} ${cmd}";
+    # echo -e "";      --- it no longer has a blank line between commands
     local echo_dark_gray="\033[2;49;39m"
 
     echo -e "$echo_dark_gray${(l.$(afmagic_dashes)..-.)}${color_reset}"
@@ -203,10 +202,8 @@ precmd() {
 
 }
 
-
 # set option
 setopt PROMPT_SUBST;
-
 
 # timer
 #REF: https://stackoverflow.com/questions/26526175/zsh-menu-completion-causes-problems-after-zle-reset-prompt
@@ -220,7 +217,6 @@ TRAPALRM() {
         zle reset-prompt;
     fi
 }
-
 
 
 # prompt
